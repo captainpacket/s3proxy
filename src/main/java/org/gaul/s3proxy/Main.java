@@ -359,6 +359,11 @@ public final class Main {
         String identity = properties.getProperty(Constants.PROPERTY_IDENTITY);
         String credential = properties.getProperty(
                 Constants.PROPERTY_CREDENTIAL);
+        String useInstanceCredentialsString = properties.getProperty(
+                "jclouds.aws.use-instance-credentials");
+        boolean useInstanceCredentials = useInstanceCredentialsString != null &&
+                useInstanceCredentialsString.equalsIgnoreCase("true");
+        properties.remove("jclouds.aws.use-instance-credentials");
         String endpoint = properties.getProperty(Constants.PROPERTY_ENDPOINT);
         properties.remove(Constants.PROPERTY_ENDPOINT);
         String region = properties.getProperty(
@@ -387,12 +392,20 @@ public final class Main {
             System.clearProperty(Constants.PROPERTY_CREDENTIAL);
         }
 
-        if (identity == null || credential == null) {
+        boolean missingIdentityOrCredential = identity == null ||
+                credential == null;
+        if (missingIdentityOrCredential && !provider.equals("aws-s3")) {
             System.err.println(
                     "Properties file must contain: " +
                     Constants.PROPERTY_IDENTITY + " and " +
                     Constants.PROPERTY_CREDENTIAL);
             System.exit(1);
+        }
+        if (identity == null) {
+            identity = "";
+        }
+        if (credential == null) {
+            credential = "";
         }
 
         properties.setProperty(Constants.PROPERTY_USER_AGENT,
@@ -411,7 +424,9 @@ public final class Main {
             builder = builder.endpoint(endpoint);
         }
 
-        if ((identity.isEmpty() || credential.isEmpty()) && provider.equals("aws-s3")) {
+        if (provider.equals("aws-s3") &&
+                (useInstanceCredentials || identity.isEmpty() ||
+                        credential.isEmpty())) {
             @SuppressModernizer
             Supplier<Credentials> credentialsSupplier = new Supplier<Credentials>() {
                 @Override
