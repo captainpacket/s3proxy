@@ -36,6 +36,20 @@ jclouds.provider=filesystem
 jclouds.filesystem.basedir=/tmp/s3proxy
 ```
 
+For deployments on Amazon EC2, S3Proxy can fetch credentials from the
+instance metadata service.  When using the `aws-s3` provider you may omit
+`jclouds.identity` and `jclouds.credential` and enable instance profile
+credentials via:
+
+```
+jclouds.provider=aws-s3
+jclouds.region=us-east-1
+jclouds.aws.use-instance-credentials=true
+```
+
+This uses the AWS default credentials provider chain so that the instance
+profile supplies temporary credentials.
+
 First create the filesystem basedir:
 
 ```
